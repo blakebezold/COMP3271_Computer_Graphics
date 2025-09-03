@@ -103,4 +103,5 @@ void MouseInteraction(double m_x, double m_y) {
         triangle_to_draw.color_index = triangles.size() % 11;
         triangles.push_back(triangle_to_draw);
         point_count = 0;
+    }
 }
