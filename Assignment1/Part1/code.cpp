@@ -72,6 +72,16 @@ void DrawTriangles() {
     // Use triangles[i] to get the ith triangle.
     // Remember to set current gl color from the color_array.
     // If the number of triangles exceeds the length of the color list, you can start iterating the color list from the beginning again.
+    glBegin(GL_TRIANGLES);
+    for (Triangle& tri : triangles) {
+        glColor3dv(color_array[tri.color_index]);
+                       
+        glVertex2dv(tri.vertices[0]);
+        glVertex2dv(tri.vertices[1]);
+        glVertex2dv(tri.vertices[2]);
+        
+    }
+    glEnd();
 }
 
 
@@ -81,7 +91,16 @@ void DrawTriangles() {
 
 void MouseInteraction(double m_x, double m_y) {
     // TODO: Store the point temporarily into the variable triangle_to_draw.
+    triangle_to_draw.vertices[point_count][0] = m_x;
+    triangle_to_draw.vertices[point_count][1] = m_y;
+    point_count++;
     // When 3 points are specified, we get a new triangle.
+
     // Store the points of the triangle into a new element of the list 'triangles'
     // Use push_back function from std::Vector to add new triangles to the list
+    
+    if (point_count == 3) {
+        triangle_to_draw.color_index = triangles.size() % 11;
+        triangles.push_back(triangle_to_draw);
+        point_count = 0;
 }
