@@ -40,19 +40,19 @@ void MainFrame::LeftMouseMove(float start_x, float start_y, float curr_x, float 
 
         // ===== SOLUTION OBJ_ROTATION BEGIN =====
         // 1. find V on the screen
-        // V = (curr_x, curr_y) - (start_x, start_y)
+        glm::vec2 V(curr_x -start_x, curr_y - start_y);
         // 2. rotate V to A by 90 degrees
-        // A = ?
+        glm::vec2 A = glm::vec2(-V.y, V.x);
         // 3. find the rotation axis in the *world space*
-        // glm::vec3 rot_axis = ?
+        glm::vec3 rot_axis = glm::normalize(Screen2World(A + glm::vec2(start_x, start_y)) - Screen2World(glm::vec2(start_x, start_y)));
         // 4. find the rotation angle k * ||A||, assign a proper value to k
-        // float rot_angle = ?
+        float rot_angle = 0.01f * sqrt((A.x*A.x)+(A.y*A.y));
         // 5. find the rotation matrix
-        // glm::mat4x4 rot_mat = ?
+        glm::mat4x4 rot_mat = glm::rotate(glm::mat4x4(1.f), rot_angle, rot_axis);
         // 6. find the translation matrix
-        // glm::mat4x4 trans_mat = ?
+        glm::mat4x4 trans_mat = glm::translate(glm::mat4x4(1.f), mesh_.center_);
         // 7. find the final transformation matrix
-        // transform_mat = ?
+        transform_mat = trans_mat * rot_mat * glm::inverse(trans_mat);
         // ===== SOLUTION OBJ_ROTATION END =====
 
         mesh_.ApplyTransform(transform_mat);
@@ -82,7 +82,7 @@ void MainFrame::LeftMouseMove(float start_x, float start_y, float curr_x, float 
         glm::vec3 a = Screen2World(start_x, start_y, z_vals);
         glm::vec3 b = Screen2World(curr_x, curr_y, z_vals);
         // 5. find the translation matrix
-        // transform_mat = glm::translate(glm::mat4x4(1.f), ?);
+        transform_mat = glm::translate(glm::mat4x4(1.f), b - a);
         // ===== SOLUTION OBJ_TRANSLATION END =====
 
         mesh_.ApplyTransform(transform_mat);
@@ -107,9 +107,22 @@ void MainFrame::LeftMouseMove(float start_x, float start_y, float curr_x, float 
         if(face_index == -1) return;
         // 2. calculate the face normal vector in the world space using "mesh_.faces_" and "mesh_.vertices_"
         // possible useful functions: glm::cross, glm::normalize
-        // glm::vec3 face_normal = ?
+        glm::vec3 v0 = mesh_.vertices_[mesh_.faces_[face_index].v[0]];
+        glm::vec3 v1 = mesh_.vertices_[mesh_.faces_[face_index].v[1]];
+        glm::vec3 v2 = mesh_.vertices_[mesh_.faces_[face_index].v[2]];
+        glm::vec3 face_normal = glm::normalize(glm::cross(v1 - v0, v1 - v2));
         // 3. find the point on ray (intersected_point, face_normal) which is the closest to ray (o, v_cur)
+        
+        glm::vec3 c = o - intersected_point;
+        float ab = glm::dot(face_normal, v_cur);
+        float ac = glm::dot(face_normal, c);
+        float bc = glm::dot(v_cur, c);
+        float aa = glm::dot(face_normal, face_normal);
+        float bb = glm::dot(v_cur, v_cur);
+
+        glm::vec3 point = face_normal*((-1*ab*bc)+(ac*bb))/((aa*bb)-(ab*ab));
         // 4. find the translation matrix to move the face vertices along the face normal direction to the new point
+        transform_mat = glm::translate(glm::mat4x4(1.f), point);
         // ===== SOLUTION OBJ_EXTRUDE END =====
 
         mesh_.ApplyFaceTransform(face_index, transform_mat);
@@ -121,6 +134,10 @@ void MainFrame::LeftMouseMove(float start_x, float start_y, float curr_x, float 
         glm::mat4x4 transform_mat(1.f);
 
         // ===== SOLUTION OBJ_SCALE BEGIN =====
+        float scale_factor = 1 + 0.03f * (curr_y - start_y);
+        glm::mat4x4 scale_mat = glm::scale(glm::mat4x4(1.f), glm::vec3(scale_factor,scale_factor,scale_factor));
+        glm::mat4x4 trans_mat = glm::translate(glm::mat4x4(1.f), mesh_.center_);
+        transform_mat = trans_mat * scale_mat * glm::inverse(trans_mat);
         // ===== SOLUTION OBJ_SCALE END =====
 
         mesh_.ApplyTransform(transform_mat);
